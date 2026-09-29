@@ -109,6 +109,8 @@ def build(articles, lm, val_start, column_map=None, n_components=30,
                        f"are {list(df.columns)}. Set COLUMN_MAP by hand.")
 
     df["date"] = _parse_dates(df["date"])
+    if "trade_date" in df:
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
     bad = df["date"].isna().sum()
     if bad:
         print(f"WARNING: dropped {bad} rows with unreadable dates")
@@ -139,9 +141,12 @@ def build(articles, lm, val_start, column_map=None, n_components=30,
         df = df.drop(columns=[c for c in df if c == "gdelt_cameo_<NA>"])
 
     # 6. TF-IDF + SVD, fitted on TRAIN period only -------------------------
-    train_mask = df["date"] < pd.Timestamp(val_start)
+    # split on trade_date when available, so this boundary matches the final
+    # train/validation/test files built by Person 3
+    split_col = "trade_date" if "trade_date" in df else "date"
+    train_mask = df[split_col] < pd.Timestamp(val_start)
     print(f"Fitting TF-IDF/SVD on {train_mask.sum():,} training articles "
-          f"(before {val_start})")
+          f"({split_col} before {val_start})")
     vec, svd = tfidf_svd.fit_tfidf_svd(df.loc[train_mask, "body"],
                                        n_components=n_components,
                                        min_df=min_df)
@@ -153,7 +158,9 @@ def build(articles, lm, val_start, column_map=None, n_components=30,
     # 7. save ----------------------------------------------------------------
     feature_cols = [c for c in df.columns
                     if c.startswith(("title_", "body_", "ent_", "gdelt_"))]
-    keep = ["article_id", "date", "title"] + feature_cols
+    keep = (["article_id", "date"]
+            + (["trade_date"] if "trade_date" in df else [])
+            + ["title"] + feature_cols)
     df[keep].to_csv(out_dir / "article_features.csv", index=False)
     aggregate_daily(df[keep], key="date").to_csv(
         out_dir / "daily_preview.csv", index=False)
