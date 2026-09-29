@@ -1,0 +1,31 @@
+{
+    "data_source": "Bank Indonesia JISDOR",
+    "date_range": {
+        "full_calendar": "2021-09-01 to 2026-09-01",
+        "modeling_data": "2021-09-29 to 2026-08-31"
+    },
+    "target": {
+        "definition": "UP if next trading day's log return > 0, otherwise DOWN",
+        "flat_day_handling": "DOWN"
+    },
+    "features": {
+        "fx_return_lag_0": "Current trading day's log return",
+        "fx_return_lag_1": "Previous trading day's log return",
+        "fx_return_lag_2": "Log return from 2 trading days ago",
+        "fx_return_lag_3": "Log return from 3 trading days ago",
+        "fx_return_lag_4": "Log return from 4 trading days ago",
+        "fx_volatility_5": "5-day rolling standard deviation of log returns",
+        "fx_volatility_20": "20-day rolling standard deviation of log returns",
+        "fx_momentum_5": "5-day percentage change in USD/IDR",
+        "fx_day_of_week": "Day of week encoded Monday=0 through Sunday=6"
+    },
+    "splits": {
+        "train": "2021-09-01 to 2024-12-31",
+        "validation": "2025-01-01 to 2026-03-31",
+        "test": "2026-04-01 to 2026-09-01"
+    },
+    "class_distribution": {
+        "UP": 656,
+        "DOWN": 525
+    }
+}
