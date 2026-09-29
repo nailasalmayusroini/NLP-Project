@@ -12,7 +12,16 @@ dedup could be fit on everything; for prediction features it cannot.)
 import joblib
 import pandas as pd
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
+
+# Website text left inside scraped articles (paywall, ad-blocker and audio-player notices)
+BOILERPLATE_WORDS = {"browser", "javascript", "blockers", "blocker", "disable", "disabled",
+                     "enable", "settings", "proceed", "subscribers", "subscriber", "subscribe",
+                     "log", "login", "trinity", "audio", "cookies", "cookie", "ad", "ads",
+                     "updated", "edt", "pm", "sep", "click",
+                     "extension", "extensions", "couldn", "connection", "load", "loading",
+                     "network", "valid", "player", "account"}
+STOP_WORDS = list(ENGLISH_STOP_WORDS | BOILERPLATE_WORDS)
 
 
 def fit_tfidf_svd(train_bodies: pd.Series, n_components: int = 30,
@@ -22,7 +31,7 @@ def fit_tfidf_svd(train_bodies: pd.Series, n_components: int = 30,
     vectorizer = TfidfVectorizer(
         lowercase=True,
         token_pattern=r"(?u)\b[a-zA-Z]{2,}\b",   # only real words: drops numbers and codes like "e96"
-        stop_words="english",
+        stop_words=STOP_WORDS,
         min_df=min_df,        # ignore words in fewer than min_df articles
         max_df=0.8,           # ignore words in more than 80% of articles
         max_features=max_features,
